@@ -186,11 +186,6 @@ jobs:
           set -e
           mkdir -p dist-addon
           cp -R home-assistant-addon/ws-tcp-bridge dist-addon/
-          # replace {arch} placeholders with Home Assistant arch names to point to GHCR image
-          for arch in amd64 aarch64 armv7; do
-            sed -i.bak "s|ghcr.io/xyzroe/ws-tcp-bridge-{arch}|ghcr.io/${{ github.repository }}-${arch}|g" dist-addon/ws-tcp-bridge/config.yaml || true
-          done
-          rm -f dist-addon/ws-tcp-bridge/config.yaml.bak
 
       - name: Upload add-on artifact
         uses: actions/upload-artifact@v4

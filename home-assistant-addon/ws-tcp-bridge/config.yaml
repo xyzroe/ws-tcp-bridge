@@ -12,7 +12,7 @@ init: false
 homeassistant_api: false
 ingress: false
 panel_icon: mdi:swap-horizontal
-image: ghcr.io/xyzroe/ws-tcp-bridge-{arch}
+image: ghcr.io/xyzroe/ws-tcp-bridge
 ports:
   8765/tcp: 8765
 ports_description:
