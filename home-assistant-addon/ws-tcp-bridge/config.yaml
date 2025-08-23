@@ -1,0 +1,19 @@
+name: WS TCP Bridge
+version: "0.1.0"
+slug: ws_tcp_bridge
+description: Simple WebSocket <-> TCP bridge with optional mDNS discovery and local serial exposure.
+url: https://github.com/xyzroe/ws-tcp-bridge
+arch:
+  - amd64
+  - aarch64
+  - armv7
+startup: services
+init: false
+homeassistant_api: false
+ingress: false
+panel_icon: mdi:swap-horizontal
+image: ghcr.io/xyzroe/ws-tcp-bridge-{arch}
+ports:
+  8765/tcp: 8765
+ports_description:
+  8765/tcp: WebSocket server port

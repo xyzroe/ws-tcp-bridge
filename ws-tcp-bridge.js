@@ -466,7 +466,8 @@ function detectMusl() {
   return false;
 }
 
-const WS_PORT = Number(process.argv[2] || 8765);
+// Allow configuring the port via env (PORT) or argv[2]; default 8765
+const WS_PORT = Number(process.env.PORT || process.argv[2] || 8765);
 
 // --- Global store of opened SerialPort instances ---
 const openSerialPorts = new Map(); // path -> SerialPort instance
