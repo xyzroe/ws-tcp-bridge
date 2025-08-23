@@ -29,23 +29,42 @@ No Node.js required. Download a ready-to-run binary from Releases, make it execu
 How to run:
 
 - Windows:
-  - Default: `ws-tcp-bridge.exe`
-  - Custom port: `ws-tcp-bridge.exe 9000`
+
+  - Run: `ws-tcp-bridge-windows-*.exe` or double click
+
 - Linux:
-  1. `chmod +x ./ws-tcp-bridge`
-  2. Default: `./ws-tcp-bridge`
-     Custom port: `./ws-tcp-bridge 9000`
+
+  1. Make executable:
+     ```
+     chmod +x ./ws-tcp-bridge-linux-arm64
+     ```
+     or
+     ```
+     chmod +x ./ws-tcp-bridge-linux-x64
+     ```
+  2. Run: `./ws-tcp-bridge-linux-*` or double click
+
 - macOS:
-  1. `chmod +x ./ws-tcp-bridge`
-  2. If blocked by Gatekeeper (unidentified developer), either:
-     - Right‑click the app → Open → Open, or
-     - Remove quarantine: `xattr -d com.apple.quarantine ./ws-tcp-bridge`
-  3. Default: `./ws-tcp-bridge`
-     Custom port: `./ws-tcp-bridge 9000`
+  1. Make executable and remove quarantine:
+  ```
+  chmod +x ./ws-tcp-bridge-macos-arm64
+  xattr -d com.apple.quarantine ./ws-tcp-bridge-arm64
+  ```
+  or
+  ```
+  chmod +x ./ws-tcp-bridge-macos-x64
+  xattr -d com.apple.quarantine ./ws-tcp-bridge-x64
+  ```
+  2. Run: `./ws-tcp-bridge-macos-*` or double click
 
-Examples: `./ws-tcp-bridge` (uses 8765), `./ws-tcp-bridge 9000`
+On start it prints the effective URL and needed modules statuses, e.g.
 
-On start it prints the effective URL, e.g. `[bridge] listening ws://192.168.1.42:8765`.
+```
+[bridge] listening ws://192.168.1.42:8765
+[startup] modules: ws=ok, bonjour=ok, serial=ok
+```
+
+To run on custom port: `./ws-tcp-bridge-* 9999`
 
 ## Quick start — Node.js
 
