@@ -48,12 +48,12 @@ How to run:
   1. Make executable and remove quarantine:
   ```
   chmod +x ./ws-tcp-bridge-macos-arm64
-  xattr -d com.apple.quarantine ./ws-tcp-bridge-arm64
+  xattr -d com.apple.quarantine ./ws-tcp-bridge-macos-arm64
   ```
   or
   ```
   chmod +x ./ws-tcp-bridge-macos-x64
-  xattr -d com.apple.quarantine ./ws-tcp-bridge-x64
+  xattr -d com.apple.quarantine ./ws-tcp-bridge-macos-x64
   ```
   2. Run: `./ws-tcp-bridge-macos-*` or double click
 
