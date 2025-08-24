@@ -2,7 +2,6 @@ FROM node:18-bullseye-slim
 
 ENV LANG C.UTF-8
 
-# Install build deps often required by native modules (serialport) and jq for options parsing
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
     build-essential python3 pkg-config libusb-1.0-0-dev jq ca-certificates udev git \
@@ -10,16 +9,15 @@ RUN apt-get update \
 
 WORKDIR /usr/src/app
 
-# Copy package files first for dependency install
 COPY package*.json ./
 RUN npm ci --only=production || npm i --only=production
 
-# Copy app
 COPY . .
 
-# Make run script executable
-RUN chmod +x /usr/src/app/ha_addon/run.sh
+RUN chmod +x /usr/src/app/run.sh \
+ && cp /usr/src/app/run.sh /usr/local/bin/ws-tcp-bridge-run.sh \
+ && chmod +x /usr/local/bin/ws-tcp-bridge-run.sh
 
 EXPOSE 8765
 
-CMD ["/usr/src/app/ha_addon/run.sh"]
+CMD ["/usr/local/bin/ws-tcp-bridge-run.sh"]

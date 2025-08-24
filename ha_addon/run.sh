@@ -1,7 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Read Home Assistant add-on options from /data/options.json
 OPTIONS_FILE="/data/options.json"
 
 PORT=8765
@@ -9,7 +8,6 @@ ADVERTISE_HOST=""
 DEBUG_SERIAL="false"
 
 if [ -f "$OPTIONS_FILE" ]; then
-  # Use jq if available; otherwise fallback to simple grep parsing
   if command -v jq >/dev/null 2>&1; then
     PORT=$(jq -r '.port // 8765' "$OPTIONS_FILE")
     ADVERTISE_HOST=$(jq -r '.advertise_host // ""' "$OPTIONS_FILE")
