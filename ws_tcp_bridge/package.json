@@ -1,0 +1,15 @@
+{
+  "name": "ws-tcp-bridge-addon",
+  "version": "0.1.1",
+  "private": true,
+  "type": "commonjs",
+  "main": "ws-tcp-bridge.js",
+  "scripts": {
+    "start": "node ws-tcp-bridge.js"
+  },
+  "dependencies": {
+    "ws": "^8.14.2",
+    "bonjour-service": "^1.3.0",
+    "serialport": "^12.0.0"
+  }
+}

@@ -73,6 +73,42 @@ Requires Node.js >= 16.
 1. Install deps: `npm install`
 2. Run: `node ws-tcp-bridge.js 8765` (or `npm start` for the default 8765)
 
+## Quick start — Docker
+
+Prebuilt multi-arch images are published to GHCR on each release/tag.
+
+- Image: `ghcr.io/xyzroe/ws-tcp-bridge:<tag>` (e.g. `v0.1.1`)
+
+Run (basic):
+
+```bash
+docker run --rm -p 8765:8765 -e ADVERTISE_HOST=192.168.1.42 ghcr.io/xyzroe/ws-tcp-bridge:latest
+```
+
+Customize port or advertised host:
+
+```bash
+docker run --rm \
+  -e PORT=9000 \
+  -e ADVERTISE_HOST=192.168.1.42 \
+  -p 9000:9000 \
+  ghcr.io/xyzroe/ws-tcp-bridge:latest
+```
+
+mDNS and local serial notes:
+
+- mDNS discovery inside containers require host networking on Linux. If needed:
+  ```bash
+  docker run --rm --network host ghcr.io/xyzroe/ws-tcp-bridge:latest
+  ```
+- To expose a host serial device to the container add `--device` (Linux):
+  ```bash
+  docker run --rm --network host \
+    --device /dev/ttyUSB0:/dev/ttyUSB0 \
+    ghcr.io/xyzroe/ws-tcp-bridge:latest
+  ```
+  Then query `/mdns?types=local` and connect via the advertised TCP port.
+
 ## Protocol: WebSocket ↔ TCP
 
 - Server listens on `ws://0.0.0.0:<WS_PORT>`
@@ -137,6 +173,27 @@ Response:
 
 - `ADVERTISE_HOST`: override the host/IP in logs and `/mdns` serial entries
 - Port is taken from the CLI arg (default 8765)
+- In Docker, you can also use `PORT` env and map the same container port with `-p PORT:PORT`.
+
+## Home Assistant add-on (optional)
+
+An add-on definition is included under `home-assistant-addon/ws-tcp-bridge/` and is published alongside releases.
+
+Install:
+
+1. In Home Assistant, go to Settings → Add-ons → Add-on Store.
+2. Add this repository URL or import the add-on folder into a local add-ons repo.
+3. Install “WS TCP Bridge”, start it, and toggle “Start on boot” if desired.
+
+Config keys:
+
+- `port` (default: 8765)
+- `advertise_host` (optional): IP/hostname to publish in logs and `/mdns` serial entries.
+
+Serial and mDNS tips:
+
+- Ensure the add-on has access to serial hardware (enable UART/hardware access or map devices depending on your HA setup).
+- For better mDNS behavior, host networking may be required depending on your environment.
 
 ## Build your own binaries (optional)
 
