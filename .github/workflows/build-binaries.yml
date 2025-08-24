@@ -123,6 +123,7 @@ jobs:
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
+          pattern: '{mac,linux,windows}'
           path: dist-release
           merge-multiple: true
 
