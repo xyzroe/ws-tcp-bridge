@@ -22,11 +22,49 @@ Warning: development helper only. Don’t expose it to the public Internet.
 
 [![Open your Home Assistant instance and show the add add-on repository dialog with a specific repository URL pre-filled.](https://my.home-assistant.io/badges/supervisor_add_addon_repository.svg)](https://my.home-assistant.io/redirect/supervisor_add_addon_repository/?repository_url=https%3A%2F%2Fgithub.com%2Fxyzroe%2Fws-tcp-bridge)
 
+## Quick start — Docker
+
+- [Docker images page](https://github.com/xyzroe/ws-tcp-bridge/pkgs/container/ws-tcp-bridge)
+
+Prebuilt multi-arch images are published to GHCR on each release/tag.
+
+- Image: `ghcr.io/xyzroe/ws-tcp-bridge:<tag>` (e.g. `v0.1.1`)
+
+Run (basic):
+
+```bash
+docker run --rm -p 8765:8765 -e ADVERTISE_HOST=192.168.1.42 ghcr.io/xyzroe/ws-tcp-bridge:latest
+```
+
+Customize port or advertised host:
+
+```bash
+docker run --rm \
+  -e PORT=9000 \
+  -e ADVERTISE_HOST=192.168.1.42 \
+  -p 9000:9000 \
+  ghcr.io/xyzroe/ws-tcp-bridge:latest
+```
+
+mDNS and local serial notes:
+
+- mDNS discovery inside containers require host networking on Linux. If needed:
+  ```bash
+  docker run --rm --network host ghcr.io/xyzroe/ws-tcp-bridge:latest
+  ```
+- To expose a host serial device to the container add `--device` (Linux):
+  ```bash
+  docker run --rm --network host \
+    --device /dev/ttyUSB0:/dev/ttyUSB0 \
+    ghcr.io/xyzroe/ws-tcp-bridge:latest
+  ```
+  Then query `/mdns?types=local` and connect via the advertised TCP port.
+
 ## Quick start — prebuilt binaries
 
 No Node.js required. Download a ready-to-run binary from Releases, make it executable (Linux/macOS), and run. The port argument is optional; default is 8765.
 
-- Releases: https://github.com/xyzroe/ws-tcp-bridge/releases
+- [Releases page](https://github.com/xyzroe/ws-tcp-bridge/releases)
 
 How to run:
 
@@ -81,42 +119,6 @@ Requires Node.js >= 16.
 
 1. Install deps: `npm install`
 2. Run: `node ws-tcp-bridge.js 8765` (or `npm start` for the default 8765)
-
-## Quick start — Docker
-
-Prebuilt multi-arch images are published to GHCR on each release/tag.
-
-- Image: `ghcr.io/xyzroe/ws-tcp-bridge:<tag>` (e.g. `v0.1.1`)
-
-Run (basic):
-
-```bash
-docker run --rm -p 8765:8765 -e ADVERTISE_HOST=192.168.1.42 ghcr.io/xyzroe/ws-tcp-bridge:latest
-```
-
-Customize port or advertised host:
-
-```bash
-docker run --rm \
-  -e PORT=9000 \
-  -e ADVERTISE_HOST=192.168.1.42 \
-  -p 9000:9000 \
-  ghcr.io/xyzroe/ws-tcp-bridge:latest
-```
-
-mDNS and local serial notes:
-
-- mDNS discovery inside containers require host networking on Linux. If needed:
-  ```bash
-  docker run --rm --network host ghcr.io/xyzroe/ws-tcp-bridge:latest
-  ```
-- To expose a host serial device to the container add `--device` (Linux):
-  ```bash
-  docker run --rm --network host \
-    --device /dev/ttyUSB0:/dev/ttyUSB0 \
-    ghcr.io/xyzroe/ws-tcp-bridge:latest
-  ```
-  Then query `/mdns?types=local` and connect via the advertised TCP port.
 
 ## Protocol: WebSocket ↔ TCP
 
