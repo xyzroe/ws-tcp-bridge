@@ -184,16 +184,3 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Prepare Home Assistant add-on artifact
-        run: |
-          set -e
-          mkdir -p dist-addon
-          cp -R ws_tcp_bridge dist-addon/
-          cp repository.json dist-addon/
-
-      - name: Upload add-on artifact
-        uses: actions/upload-artifact@v4
-        with:
-          name: home-assistant-addon
-          path: dist-addon/**
-
