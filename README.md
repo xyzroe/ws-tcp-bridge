@@ -19,8 +19,8 @@ An add-on definition is included under `home-assistant-addon/ws-tcp-bridge/` and
 The add-on supports the following configuration options:
 
 ```yaml
-port: 8765                    # WebSocket server port (default: 8765)
-advertise_host: ""            # Optional: IP/hostname to advertise in mDNS
+port: 8765 # WebSocket server port (default: 8765)
+advertise_host: "" # Optional: IP/hostname to advertise in mDNS
 ```
 
 Example configuration:
@@ -40,12 +40,14 @@ advertise_host: "192.168.1.100"
 ### Usage
 
 Once installed and started, the WebSocket bridge will be available at:
+
 ```
 ws://<home-assistant-ip>:8765/?host=<target-host>&port=<target-port>
 ```
 
 For mDNS discovery and serial port management, use the HTTP endpoints:
-```
+
+````
 http://<home-assistant-ip>:8765/mdns?types=local
 http://<home-assistant-ip>:8765/sc?path=/dev/ttyUSB0&dtr=1
 ```mg></a>
@@ -54,9 +56,9 @@ http://<home-assistant-ip>:8765/sc?path=/dev/ttyUSB0&dtr=1
 <a href="https://github.com/xyzroe/ws-tcp-bridge/issues"><img src="https://img.shields.io/github/issues/xyzroe/ws-tcp-bridge" alt="GitHub Issues or Pull Requests"></img></a>
 <a href="LICENSE"><img src="https://img.shields.io/github/license/xyzroe/ws-tcp-bridge.svg" alt="License"></img></a>
 </div>
-  
-  
-  
+
+
+
 Tiny WebSocket ↔ TCP bridge for local development. It can also discover devices via mDNS and expose local serial ports over TCP for quick tests.
 
 Warning: development helper only. Don’t expose it to the public Internet.
@@ -93,23 +95,29 @@ How to run:
 
 - macOS:
   1. Make executable and remove quarantine:
-  ```
-  chmod +x ./ws-tcp-bridge-macos-arm64
-  xattr -d com.apple.quarantine ./ws-tcp-bridge-macos-arm64
-  ```
-  or
-  ```
-  chmod +x ./ws-tcp-bridge-macos-x64
-  xattr -d com.apple.quarantine ./ws-tcp-bridge-macos-x64
-  ```
-  2. Run: `./ws-tcp-bridge-macos-*` or double click
+````
+
+chmod +x ./ws-tcp-bridge-macos-arm64
+xattr -d com.apple.quarantine ./ws-tcp-bridge-macos-arm64
+
+```
+or
+```
+
+chmod +x ./ws-tcp-bridge-macos-x64
+xattr -d com.apple.quarantine ./ws-tcp-bridge-macos-x64
+
+```
+2. Run: `./ws-tcp-bridge-macos-*` or double click
 
 On start it prints the effective URL and needed modules statuses, e.g.
 
 ```
+
 [bridge] listening ws://192.168.1.42:8765
 [startup] modules: ws=ok, bonjour=ok, serial=ok
-```
+
+````
 
 To run on custom port: `./ws-tcp-bridge-* 9999`
 
@@ -130,7 +138,7 @@ Run (basic):
 
 ```bash
 docker run --rm -p 8765:8765 -e ADVERTISE_HOST=192.168.1.42 ghcr.io/xyzroe/ws-tcp-bridge:latest
-```
+````
 
 Customize port or advertised host:
 

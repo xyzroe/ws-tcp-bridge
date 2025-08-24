@@ -47,6 +47,7 @@ Optional hostname or IP address to advertise in mDNS responses and logs. If not 
 ### Basic WebSocket to TCP Bridge
 
 Connect your WebSocket client to:
+
 ```
 ws://<home-assistant-ip>:<port>/?host=<target-host>&port=<target-port>
 ```
@@ -54,6 +55,7 @@ ws://<home-assistant-ip>:<port>/?host=<target-host>&port=<target-port>
 ### mDNS Discovery
 
 Make a GET request to discover devices:
+
 ```
 http://<home-assistant-ip>:<port>/mdns?types=_zigstar_gw._tcp,local
 ```
@@ -61,6 +63,7 @@ http://<home-assistant-ip>:<port>/mdns?types=_zigstar_gw._tcp,local
 ### Serial Port Control
 
 Set DTR/RTS signals on serial ports:
+
 ```
 http://<home-assistant-ip>:<port>/sc?path=/dev/ttyUSB0&dtr=1&rts=0
 ```

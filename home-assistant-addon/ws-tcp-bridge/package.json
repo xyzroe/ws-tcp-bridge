@@ -14,7 +14,7 @@
   },
   "keywords": [
     "websocket",
-    "tcp", 
+    "tcp",
     "bridge",
     "mdns",
     "serial",
