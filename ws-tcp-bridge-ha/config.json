@@ -1,6 +1,6 @@
 {
   "name": "WS-TCP Bridge",
-  "version": "0.1.3",
+  "version": "0.1.0",
   "slug": "ws-tcp-bridge-ha",
   "description": "Simple WebSocket <-> TCP bridge with optional mDNS and local serial exposure",
   "arch": ["amd64", "armv7", "armhf", "aarch64", "i386"],
@@ -9,15 +9,19 @@
   "options": {
     "port": 8765,
     "advertise_host": "",
-    "debug_serial": false
+    "host_network": true,
+    "uart_access": false,
+    "usb_access": true
   },
   "schema": {
     "port": "int",
     "advertise_host": "str",
-    "debug_serial": "bool"
+    "host_network": "bool",
+    "uart_access": "bool",
+    "usb_access": "bool"
   },
   "map": ["config:rw"],
-  "host_network": true,
-  "uart": true,
-  "usb": true
+  "host_network": "%%host_network%%",
+  "uart": "%%uart_access%%",
+  "usb": "%%usb_access%%"
 }
