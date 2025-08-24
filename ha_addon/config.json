@@ -16,7 +16,6 @@
     "advertise_host": "str",
     "debug_serial": "bool"
   },
-  "webui": "http://[HOST]:[PORT:8765]",
   "map": ["config:rw"],
   "host_network": true,
   "uart": true,
