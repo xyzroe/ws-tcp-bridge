@@ -1,7 +1,24 @@
 # ws-tcp-bridge
 
 <div align="center"> 
-<a href="https://github.com/xyzroe/ws-tcp-bridge/releases"><img src="https://img.shields.io/github/release/xyzroe/ws-tcp-bridge.svg" alt="## Home Assistant add-on
+<a href="https://github.com/xyzroe/ws-tcp-bridge/releases"><img src="https://img.shields.io/github/release/xyzroe/ws-tcp-bridge.svg" alt="GitHub version"></img></a>
+<a href="https://github.com/xyzroe/ws-tcp-bridge/actions/workflows/build-binaries.yml"><img src="https://img.shields.io/github/actions/workflow/status/xyzroe/ws-tcp-bridge/build-binaries.yml" alt="GitHub Actions Workflow Status"></img></a>
+<a href="https://github.com/xyzroe/ws-tcp-bridge/releases/latest"><img src="https://img.shields.io/github/downloads/xyzroe/ws-tcp-bridge/total.svg" alt="GitHub download"></img></a>
+<a href="https://github.com/xyzroe/ws-tcp-bridge/issues"><img src="https://img.shields.io/github/issues/xyzroe/ws-tcp-bridge" alt="GitHub Issues or Pull Requests"></img></a>
+<a href="LICENSE"><img src="https://img.shields.io/github/license/xyzroe/ws-tcp-bridge.svg" alt="License"></img></a>
+</div>
+
+Tiny WebSocket ↔ TCP bridge for local development. It can also discover devices via mDNS and expose local serial ports over TCP for quick tests.
+
+Warning: development helper only. Don’t expose it to the public Internet.
+
+## What it’s for
+
+- Bridge a WebSocket client to any TCP host:port
+- Optionally discover targets via mDNS
+- Optionally expose each local serial port as a TCP server and control DTR/RTS
+
+## Home Assistant add-on
 
 An add-on definition is included under `home-assistant-addon/ws-tcp-bridge/` and is published alongside releases.
 
@@ -50,24 +67,7 @@ For mDNS discovery and serial port management, use the HTTP endpoints:
 ````
 http://<home-assistant-ip>:8765/mdns?types=local
 http://<home-assistant-ip>:8765/sc?path=/dev/ttyUSB0&dtr=1
-```mg></a>
-<a href="https://github.com/xyzroe/ws-tcp-bridge/actions/workflows/build-binaries.yml"><img src="https://img.shields.io/github/actions/workflow/status/xyzroe/ws-tcp-bridge/build-binaries.yml" alt="GitHub Actions Workflow Status"></img></a>
-<a href="https://github.com/xyzroe/ws-tcp-bridge/releases/latest"><img src="https://img.shields.io/github/downloads/xyzroe/ws-tcp-bridge/total.svg" alt="GitHub download"></img></a>
-<a href="https://github.com/xyzroe/ws-tcp-bridge/issues"><img src="https://img.shields.io/github/issues/xyzroe/ws-tcp-bridge" alt="GitHub Issues or Pull Requests"></img></a>
-<a href="LICENSE"><img src="https://img.shields.io/github/license/xyzroe/ws-tcp-bridge.svg" alt="License"></img></a>
-</div>
-
-
-
-Tiny WebSocket ↔ TCP bridge for local development. It can also discover devices via mDNS and expose local serial ports over TCP for quick tests.
-
-Warning: development helper only. Don’t expose it to the public Internet.
-
-## What it’s for
-
-- Bridge a WebSocket client to any TCP host:port
-- Optionally discover targets via mDNS
-- Optionally expose each local serial port as a TCP server and control DTR/RTS
+```
 
 ## Quick start — prebuilt binaries
 
