@@ -35,22 +35,11 @@ The add-on will be available on the configured port (default: 8765).
 - `port` (int, default: 8765) — WebSocket server port
 - `advertise_host` (str, optional) — Host IP to advertise (auto-detected if empty)
 
-### Access Control
-
-- `host_network` (bool, default: true) — Enable host network access (required for mDNS)
-- `uart_access` (bool, default: true) — Enable access to UART/serial ports
-- `usb_access` (bool, default: true) — Enable access to USB devices
-
-**Security note**: Only enable the access options you actually need.
-
 ### Example Configuration
 
 ```yaml
 port: 8765
 advertise_host: ""
-host_network: true
-uart_access: true
-usb_access: true
 ```
 
 ## Usage
@@ -95,20 +84,6 @@ Query parameters:
 - `path` — serial device path (e.g., `/dev/ttyUSB0`) OR `port` — TCP port of serial server
 - `dtr` — set DTR signal (1/0 or true/false)
 - `rts` — set RTS signal (1/0 or true/false)
-
-## Access Requirements
-
-### For mDNS discovery
-
-Enable `host_network: true` — required for mDNS to work properly
-
-### For serial port access
-
-Enable `uart_access: true` — provides access to /dev/ttyAMA*, /dev/ttyUSB*, /dev/ttyACM\* devices
-
-### For USB device access
-
-Enable `usb_access: true` — provides access to USB devices
 
 ## Repository
 
