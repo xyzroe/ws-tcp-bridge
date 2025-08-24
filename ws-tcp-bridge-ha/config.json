@@ -17,5 +17,5 @@
   "map": ["config:rw"],
   "host_network": true,
   "uart": true,
-  "usb": true
+  "udev": true
 }
