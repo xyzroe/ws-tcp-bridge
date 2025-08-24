@@ -17,5 +17,6 @@
   "map": ["config:rw"],
   "host_network": true,
   "uart": true,
-  "udev": true
+  "udev": true,
+  "hassio_api": true
 }
