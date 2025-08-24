@@ -187,8 +187,8 @@ jobs:
       - name: Build and push Home Assistant add-on image
         uses: docker/build-push-action@v6
         with:
-          context: ./home-assistant-addon/ws-tcp-bridge
-          file: ./home-assistant-addon/ws-tcp-bridge/Dockerfile
+          context: ./ws_tcp_bridge
+          file: ./ws_tcp_bridge/Dockerfile
           push: true
           platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: |
@@ -202,7 +202,9 @@ jobs:
         run: |
           set -e
           mkdir -p dist-addon
-          cp -R home-assistant-addon/ws-tcp-bridge dist-addon/
+          cp -R ws_tcp_bridge dist-addon/
+          cp repository.json dist-addon/
+          cp ADDON_README.md dist-addon/README.md
 
       - name: Upload add-on artifact
         uses: actions/upload-artifact@v4
