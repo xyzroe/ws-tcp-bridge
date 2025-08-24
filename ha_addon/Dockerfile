@@ -1,6 +1,6 @@
 FROM node:18-bullseye-slim
 
-ENV LANG C.UTF-8
+ENV LANG=C.UTF-8
 
 RUN apt-get update \
   && apt-get install -y --no-install-recommends \
@@ -10,7 +10,8 @@ RUN apt-get update \
 WORKDIR /usr/src/app
 
 COPY package*.json ./
-RUN npm ci --only=production || npm i --only=production
+# Use npm install to avoid requiring a lockfile inside add-on context
+RUN npm install --omit=dev
 
 COPY . .
 
