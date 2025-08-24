@@ -1,6 +1,6 @@
 {
   "name": "WS-TCP Bridge",
-  "version": "0.1.2",
+  "version": "0.1.0",
   "slug": "ha_addon",
   "description": "Simple WebSocket <-> TCP bridge with optional mDNS and local serial exposure",
   "arch": ["amd64", "armv7", "armhf", "aarch64", "i386"],
