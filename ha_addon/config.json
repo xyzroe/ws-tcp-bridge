@@ -6,9 +6,6 @@
   "arch": ["amd64", "armv7", "armhf", "aarch64", "i386"],
   "startup": "services",
   "boot": "auto",
-  "ports": {
-    "8765/tcp": 8765
-  },
   "options": {
     "port": 8765,
     "advertise_host": "",
