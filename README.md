@@ -1,7 +1,54 @@
 # ws-tcp-bridge
 
 <div align="center"> 
-<a href="https://github.com/xyzroe/ws-tcp-bridge/releases"><img src="https://img.shields.io/github/release/xyzroe/ws-tcp-bridge.svg" alt="GitHub version"></img></a>
+<a href="https://github.com/xyzroe/ws-tcp-bridge/releases"><img src="https://img.shields.io/github/release/xyzroe/ws-tcp-bridge.svg" alt="## Home Assistant add-on
+
+An add-on definition is included under `home-assistant-addon/ws-tcp-bridge/` and is published alongside releases.
+
+### Installation
+
+1. In Home Assistant, go to **Settings** → **Add-ons** → **Add-on Store**.
+2. Click the **⋮** (three dots) in the top right corner and select **Repositories**.
+3. Add this repository URL: `https://github.com/xyzroe/ws-tcp-bridge`
+4. Find "WS TCP Bridge" in the add-on store and click **Install**.
+5. Configure the add-on (see Configuration section below).
+6. Start the add-on and optionally enable "Start on boot".
+
+### Configuration
+
+The add-on supports the following configuration options:
+
+```yaml
+port: 8765                    # WebSocket server port (default: 8765)
+advertise_host: ""            # Optional: IP/hostname to advertise in mDNS
+```
+
+Example configuration:
+
+```yaml
+port: 8765
+advertise_host: "192.168.1.100"
+```
+
+### Features
+
+- **Serial device access**: The add-on automatically maps common serial devices (`/dev/ttyUSB0`, `/dev/ttyUSB1`, `/dev/ttyACM0`, `/dev/ttyACM1`)
+- **mDNS discovery**: Works within the Home Assistant network
+- **Health monitoring**: Built-in health checks for reliable operation
+- **Multi-architecture**: Supports amd64, aarch64, and armv7
+
+### Usage
+
+Once installed and started, the WebSocket bridge will be available at:
+```
+ws://<home-assistant-ip>:8765/?host=<target-host>&port=<target-port>
+```
+
+For mDNS discovery and serial port management, use the HTTP endpoints:
+```
+http://<home-assistant-ip>:8765/mdns?types=local
+http://<home-assistant-ip>:8765/sc?path=/dev/ttyUSB0&dtr=1
+```mg></a>
 <a href="https://github.com/xyzroe/ws-tcp-bridge/actions/workflows/build-binaries.yml"><img src="https://img.shields.io/github/actions/workflow/status/xyzroe/ws-tcp-bridge/build-binaries.yml" alt="GitHub Actions Workflow Status"></img></a>
 <a href="https://github.com/xyzroe/ws-tcp-bridge/releases/latest"><img src="https://img.shields.io/github/downloads/xyzroe/ws-tcp-bridge/total.svg" alt="GitHub download"></img></a>
 <a href="https://github.com/xyzroe/ws-tcp-bridge/issues"><img src="https://img.shields.io/github/issues/xyzroe/ws-tcp-bridge" alt="GitHub Issues or Pull Requests"></img></a>

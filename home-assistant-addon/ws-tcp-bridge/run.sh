@@ -1,12 +1,21 @@
 #!/usr/bin/with-contenv bashio
 set -euo pipefail
 
-PORT_CFG=$(bashio::config 'port')
-ADV=$(bashio::config 'advertise_host')
+# Get configuration from options
+PORT_CFG=$(bashio::config 'port' '8765')
+ADV_HOST=$(bashio::config 'advertise_host' '')
 
-export PORT=${PORT_CFG:-8765}
-if [[ -n "${ADV}" ]]; then
-  export ADVERTISE_HOST="${ADV}"
+# Set environment variables
+export PORT="${PORT_CFG}"
+if [[ -n "${ADV_HOST}" ]]; then
+  export ADVERTISE_HOST="${ADV_HOST}"
 fi
 
-exec node /opt/app/ws-tcp-bridge.js "$PORT"
+# Log configuration
+bashio::log.info "Starting WS TCP Bridge on port ${PORT}"
+if [[ -n "${ADV_HOST}" ]]; then
+  bashio::log.info "Advertise host: ${ADV_HOST}"
+fi
+
+# Start the application
+exec node /opt/app/ws-tcp-bridge.js "${PORT}"

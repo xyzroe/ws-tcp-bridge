@@ -1,0 +1,25 @@
+{
+  "name": "ws-tcp-bridge-addon",
+  "version": "0.1.2",
+  "description": "Home Assistant add-on for WS TCP Bridge",
+  "type": "commonjs",
+  "main": "ws-tcp-bridge.js",
+  "engines": {
+    "node": ">=16"
+  },
+  "dependencies": {
+    "ws": "^8.14.2",
+    "bonjour-service": "^1.3.0",
+    "serialport": "^12.0.0"
+  },
+  "keywords": [
+    "websocket",
+    "tcp", 
+    "bridge",
+    "mdns",
+    "serial",
+    "home-assistant",
+    "addon"
+  ],
+  "license": "MIT"
+}

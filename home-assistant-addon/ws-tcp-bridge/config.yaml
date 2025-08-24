@@ -12,8 +12,22 @@ init: false
 homeassistant_api: false
 ingress: false
 panel_icon: mdi:swap-horizontal
-image: ghcr.io/xyzroe/ws-tcp-bridge
+image: "ghcr.io/xyzroe/ws-tcp-bridge/addon"
+options:
+  port: 8765
+  advertise_host: ""
+schema:
+  port: int(1, 65535)
+  advertise_host: str?
 ports:
   8765/tcp: 8765
 ports_description:
   8765/tcp: WebSocket server port
+host_network: false
+privileged:
+  - SYS_RAWIO
+devices:
+  - /dev/ttyUSB0:/dev/ttyUSB0:rwm
+  - /dev/ttyUSB1:/dev/ttyUSB1:rwm
+  - /dev/ttyACM0:/dev/ttyACM0:rwm
+  - /dev/ttyACM1:/dev/ttyACM1:rwm
