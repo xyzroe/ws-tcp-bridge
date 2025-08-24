@@ -1,3 +1,0 @@
-# This file is a placeholder for icon.png
-# In a real addon, this would be a PNG image file
-# For now, the addon will use the default icon from panel_icon in config.yaml

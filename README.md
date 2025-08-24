@@ -18,57 +18,6 @@ Warning: development helper only. Don’t expose it to the public Internet.
 - Optionally discover targets via mDNS
 - Optionally expose each local serial port as a TCP server and control DTR/RTS
 
-## Home Assistant add-on
-
-An add-on definition is included under `home-assistant-addon/ws-tcp-bridge/` and is published alongside releases.
-
-### Installation
-
-1. In Home Assistant, go to **Settings** → **Add-ons** → **Add-on Store**.
-2. Click the **⋮** (three dots) in the top right corner and select **Repositories**.
-3. Add this repository URL: `https://github.com/xyzroe/ws-tcp-bridge`
-4. Find "WS TCP Bridge" in the add-on store and click **Install**.
-5. Configure the add-on (see Configuration section below).
-6. Start the add-on and optionally enable "Start on boot".
-
-### Configuration
-
-The add-on supports the following configuration options:
-
-```yaml
-port: 8765 # WebSocket server port (default: 8765)
-advertise_host: "" # Optional: IP/hostname to advertise in mDNS
-```
-
-Example configuration:
-
-```yaml
-port: 8765
-advertise_host: "192.168.1.100"
-```
-
-### Features
-
-- **Serial device access**: The add-on automatically maps common serial devices (`/dev/ttyUSB0`, `/dev/ttyUSB1`, `/dev/ttyACM0`, `/dev/ttyACM1`)
-- **mDNS discovery**: Works within the Home Assistant network
-- **Health monitoring**: Built-in health checks for reliable operation
-- **Multi-architecture**: Supports amd64, aarch64, and armv7
-
-### Usage
-
-Once installed and started, the WebSocket bridge will be available at:
-
-```
-ws://<home-assistant-ip>:8765/?host=<target-host>&port=<target-port>
-```
-
-For mDNS discovery and serial port management, use the HTTP endpoints:
-
-````
-http://<home-assistant-ip>:8765/mdns?types=local
-http://<home-assistant-ip>:8765/sc?path=/dev/ttyUSB0&dtr=1
-```
-
 ## Quick start — prebuilt binaries
 
 No Node.js required. Download a ready-to-run binary from Releases, make it executable (Linux/macOS), and run. The port argument is optional; default is 8765.
@@ -95,6 +44,7 @@ How to run:
 
 - macOS:
   1. Make executable and remove quarantine:
+
 ````
 
 chmod +x ./ws-tcp-bridge-macos-arm64
@@ -138,7 +88,7 @@ Run (basic):
 
 ```bash
 docker run --rm -p 8765:8765 -e ADVERTISE_HOST=192.168.1.42 ghcr.io/xyzroe/ws-tcp-bridge:latest
-````
+```
 
 Customize port or advertised host:
 
