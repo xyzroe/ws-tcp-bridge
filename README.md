@@ -85,31 +85,29 @@ How to run:
   2. Run: `./ws-tcp-bridge-linux-*` or double click
 
 - macOS:
+
   1. Make executable and remove quarantine:
 
-````
+  ```
+  chmod +x ./ws-tcp-bridge-macos-arm64
+  xattr -d com.apple.quarantine ./ws-tcp-bridge-macos-arm64
+  ```
 
-chmod +x ./ws-tcp-bridge-macos-arm64
-xattr -d com.apple.quarantine ./ws-tcp-bridge-macos-arm64
+  or
 
-```
-or
-```
+  ```
+  chmod +x ./ws-tcp-bridge-macos-x64
+  xattr -d com.apple.quarantine ./ws-tcp-bridge-macos-x64
+  ```
 
-chmod +x ./ws-tcp-bridge-macos-x64
-xattr -d com.apple.quarantine ./ws-tcp-bridge-macos-x64
+  2. Run: `./ws-tcp-bridge-macos-*` or double click
 
-```
-2. Run: `./ws-tcp-bridge-macos-*` or double click
+  On start it prints the effective URL and needed modules statuses, e.g.
 
-On start it prints the effective URL and needed modules statuses, e.g.
-
-```
-
-[bridge] listening ws://192.168.1.42:8765
-[startup] modules: ws=ok, bonjour=ok, serial=ok
-
-````
+  ```
+  [bridge] listening ws://192.168.1.42:8765
+  [startup] modules: ws=ok, bonjour=ok, serial=ok
+  ```
 
 To run on custom port: `./ws-tcp-bridge-* 9999`
 
