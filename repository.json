@@ -1,13 +1,5 @@
 {
-  "name": "WS TCP Bridge Add-on Repository",
+  "name": "WS TCP Bridge Add-on Repository", 
   "url": "https://github.com/xyzroe/ws-tcp-bridge",
-  "maintainer": "xyzroe",
-  "addons": {
-    "ws_tcp_bridge": {
-      "name": "WS TCP Bridge",
-      "description": "WebSocket to TCP bridge with mDNS discovery and serial port support",
-      "repository": "https://github.com/xyzroe/ws-tcp-bridge",
-      "version": "0.1.3"
-    }
-  }
+  "maintainer": "xyzroe"
 }

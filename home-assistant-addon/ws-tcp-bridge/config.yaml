@@ -24,8 +24,8 @@ ports:
 ports_description:
   8765/tcp: WebSocket server port
 host_network: false
-privileged:
-  - SYS_RAWIO
+privileged: false
+uart: true
 devices:
   - /dev/ttyUSB0:/dev/ttyUSB0:rwm
   - /dev/ttyUSB1:/dev/ttyUSB1:rwm
