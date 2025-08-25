@@ -1,9 +1,9 @@
 {
   "name": "WS-TCP Bridge",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "slug": "ws-tcp-bridge-ha",
   "description": "Simple WebSocket <-> TCP bridge with optional mDNS and local serial exposure",
-  "image": "ghcr.io/xyzroe/ws-tcp-bridge-ha",
+  "image": "ghcr.io/xyzroe/ws-tcp-bridge-ha:latest",
   "arch": ["amd64", "armv7", "aarch64"],
   "startup": "services",
   "boot": "auto",
