@@ -1,7 +1,0 @@
-# Ship only what's needed for the container
-
-\*\*
-!package.json
-!package-lock.json
-!run.sh
-!Dockerfile
