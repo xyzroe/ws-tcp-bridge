@@ -5,8 +5,6 @@
   "description": "Simple WebSocket <-> TCP bridge with optional mDNS and local serial exposure",
   "image": "ghcr.io/xyzroe/ws-tcp-bridge",
   "arch": ["amd64", "armv7", "aarch64"],
-  "image": "ghcr.io/xyzroe/ws-tcp-bridge-ha",
-  "arch": ["amd64", "armv7", "aarch64"],
   "startup": "services",
   "boot": "auto",
   "options": {
