@@ -13,8 +13,8 @@ RUN npm ci --only=production && npm cache clean --force
 # Production stage
 FROM node:18-alpine
 
-# Install jq, su-exec, and udev for Home Assistant addon support
-RUN apk add --no-cache jq su-exec eudev
+# Install jq, su-exec, netcat, and udev for Home Assistant addon support
+RUN apk add --no-cache jq su-exec netcat-openbsd eudev
 
 # Create non-root user (for non-HA mode) and add to dialout group for serial access
 RUN addgroup -g 1001 -S nodejs && \
@@ -42,9 +42,9 @@ ENV PORT=8765
 # Expose default WS port
 EXPOSE 8765
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/mdns?types=local || exit 1
+# Health check - fast and reliable port check
+HEALTHCHECK --interval=10s --timeout=3s --start-period=10s --retries=3 \
+  CMD nc -z localhost ${PORT} || exit 1
 
 # Smart entrypoint: 
 # - HA mode: run as root with full device access
