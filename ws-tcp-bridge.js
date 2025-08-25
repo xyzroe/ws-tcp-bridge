@@ -474,6 +474,8 @@ const openSerialPorts = new Map(); // path -> SerialPort instance
 // Reverse mapping of local TCP server port to the serial path
 const tcpPortToSerialPath = new Map(); // tcpPort -> path
 
+const serialPortStates = new Map(); // path -> { dtr: boolean, rts: boolean }
+
 const server = http.createServer(async (req, res) => {
   try {
     const u = new URL(req.url, `http://${req.headers.host}`);
@@ -542,16 +544,46 @@ const server = http.createServer(async (req, res) => {
           return res.end(JSON.stringify({ error: "Failed to open serial port", details: String(e) }));
         }
       }
-      const setObj = {};
-      if (dtr !== null) setObj.dtr = dtr === "1" || dtr === "true";
-      if (rts !== null) setObj.rts = rts === "1" || rts === "true";
+      // Get current saved state or initialize defaults
+      let currentState = serialPortStates.get(path) || { dtr: false, rts: false };
+
+      // Build the complete state object (current + new values)
+      const setObj = { ...currentState };
+
+      // Update only the parameters that were provided
+      if (dtr !== null) {
+        setObj.dtr = dtr === "1" || dtr === "true";
+      }
+      if (rts !== null) {
+        setObj.rts = rts === "1" || rts === "true";
+      }
+
+      // Save the new state
+      serialPortStates.set(path, setObj);
+
+      if (Object.keys(setObj).length === 0) {
+        res.writeHead(400, { "content-type": "application/json", "access-control-allow-origin": "*" });
+        return res.end(JSON.stringify({ error: "No DTR/RTS parameters to set" }));
+      }
+
       serial.set(setObj, (err) => {
         if (err) {
           res.writeHead(500, { "content-type": "application/json", "access-control-allow-origin": "*" });
           return res.end(JSON.stringify({ error: "Failed to set DTR/RTS", details: String(err) }));
         }
         res.writeHead(200, { "content-type": "application/json", "access-control-allow-origin": "*" });
-        return res.end(JSON.stringify({ ok: true, path, tcpPort: tcpPort || tcpPortFromPath(path), set: setObj }));
+        return res.end(
+          JSON.stringify({
+            ok: true,
+            path,
+            tcpPort: tcpPort || tcpPortFromPath(path),
+            set: setObj,
+            changed: {
+              dtr: dtr !== null ? setObj.dtr : undefined,
+              rts: rts !== null ? setObj.rts : undefined,
+            },
+          })
+        );
       });
       return;
     }

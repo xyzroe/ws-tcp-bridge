@@ -13,7 +13,8 @@ COPY package*.json ./
 # Use npm install to avoid requiring a lockfile inside add-on context
 RUN npm install --omit=dev
 
-COPY . .
+# Copy only the runtime script to minimize context
+COPY run.sh ./
 
 # Fetch the app entrypoint from the repository to avoid duplication in the add-on folder
 ARG WS_TCP_BRIDGE_REF=main
