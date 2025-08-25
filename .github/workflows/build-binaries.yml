@@ -235,7 +235,6 @@ jobs:
             ghcr.io/${{ github.repository }}
           tags: |
             type=raw,value=${{ needs.version-bump.outputs.version }}
-            type=raw,value=v${{ needs.version-bump.outputs.version }}
             type=raw,value=latest
 
       - name: Build and push main Docker image (multi-arch)
