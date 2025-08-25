@@ -230,24 +230,12 @@ jobs:
           cache-to: type=gha,mode=max
 
   docker-ha-addon:
-    name: Build & Push HA add-on images
+    name: Build & Push HA add-on image (multi-arch)
     runs-on: ubuntu-latest
-    needs: [version-bump, build]
+    needs: [version-bump]
     permissions:
       contents: read
       packages: write
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - ha_arch: amd64
-            platform: linux/amd64
-          - ha_arch: aarch64
-            platform: linux/arm64
-          - ha_arch: armv7
-            platform: linux/arm/v7
-          - ha_arch: i386
-            platform: linux/386
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -265,15 +253,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      - name: Build and push HA add-on image (${{ matrix.ha_arch }})
+      - name: Build and push HA add-on image (multi-arch)
         uses: docker/build-push-action@v6
         with:
-          context: ./ws-tcp-bridge-ha
+          context: .
           file: ./ws-tcp-bridge-ha/Dockerfile
           push: true
-          platforms: ${{ matrix.platform }}
-          build-args: |
-            WS_TCP_BRIDGE_REF=${{ github.ref_name }}
+          platforms: linux/amd64,linux/arm64,linux/arm/v7
           tags: |
-            ghcr.io/xyzroe/ws-tcp-bridge-ha-${{ matrix.ha_arch }}:${{ needs.version-bump.outputs.version }}
+            ghcr.io/xyzroe/ws-tcp-bridge-ha:${{ needs.version-bump.outputs.version }}
 

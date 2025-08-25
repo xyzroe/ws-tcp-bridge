@@ -14,12 +14,10 @@ COPY package*.json ./
 RUN npm install --omit=dev
 
 # Copy only the runtime script to minimize context
-COPY run.sh ./
+COPY ws-tcp-bridge-ha/run.sh ./
 
-# Fetch the app entrypoint from the repository to avoid duplication in the add-on folder
-ARG WS_TCP_BRIDGE_REF=main
-RUN curl -fsSL "https://raw.githubusercontent.com/xyzroe/ws-tcp-bridge/${WS_TCP_BRIDGE_REF}/ws-tcp-bridge.js" \
-  -o /usr/src/app/ws-tcp-bridge.js
+# Copy the app entrypoint from repo root (build context must be repository root)
+COPY ws-tcp-bridge.js /usr/src/app/ws-tcp-bridge.js
 
 RUN chmod +x /usr/src/app/run.sh \
  && cp /usr/src/app/run.sh /usr/local/bin/ws-tcp-bridge-run.sh \
