@@ -41,9 +41,6 @@ jobs:
           # Update add-on config.json
           tmp=$(mktemp)
           jq --arg v "$ver" '.version=$v' ws-tcp-bridge-ha/config.json > "$tmp" && mv "$tmp" ws-tcp-bridge-ha/config.json
-          # Update add-on package.json
-          tmp=$(mktemp)
-          jq --arg v "$ver" '.version=$v' ws-tcp-bridge-ha/package.json > "$tmp" && mv "$tmp" ws-tcp-bridge-ha/package.json
       - name: Commit version bumps
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
@@ -51,7 +48,6 @@ jobs:
           file_pattern: |
             package.json
             ws-tcp-bridge-ha/config.json
-            ws-tcp-bridge-ha/package.json
   build:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
