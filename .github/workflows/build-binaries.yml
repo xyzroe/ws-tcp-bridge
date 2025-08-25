@@ -20,6 +20,7 @@ jobs:
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
       - name: Parse version from tag
         id: setver
         shell: bash
@@ -29,6 +30,10 @@ jobs:
           version="${ref#v}"
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "Using version: $version"
+      - name: Checkout main branch
+        shell: bash
+        run: |
+          git checkout main
       - name: Update versions in files
         shell: bash
         run: |
@@ -44,6 +49,7 @@ jobs:
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore(release): bump version to ${{ steps.setver.outputs.version }}"
+          branch: main
           file_pattern: |
             package.json
             ws-tcp-bridge-ha/config.json
