@@ -13,12 +13,13 @@ RUN npm ci --only=production && npm cache clean --force
 # Production stage
 FROM node:18-alpine
 
-# Install jq and su-exec for Home Assistant addon support
-RUN apk add --no-cache jq su-exec
+# Install jq, su-exec, and udev for Home Assistant addon support
+RUN apk add --no-cache jq su-exec eudev
 
-# Create non-root user (for non-HA mode)
+# Create non-root user (for non-HA mode) and add to dialout group for serial access
 RUN addgroup -g 1001 -S nodejs && \
-    adduser -S nodejs -u 1001
+    adduser -S nodejs -u 1001 && \
+    addgroup nodejs dialout
 
 # Create app directory
 WORKDIR /app
@@ -45,5 +46,7 @@ EXPOSE 8765
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD wget --no-verbose --tries=1 --spider http://localhost:${PORT}/mdns?types=local || exit 1
 
-# Smart entrypoint: use HA wrapper if options.json exists, otherwise switch to nodejs user
-ENTRYPOINT ["/bin/sh", "-c", "if [ -f /data/options.json ]; then exec ./run.sh; else su-exec nodejs node /app/ws-tcp-bridge.js \"$@\"; fi", "--"]
+# Smart entrypoint: 
+# - HA mode: run as root with full device access
+# - Standalone: switch to nodejs user but keep dialout group access
+ENTRYPOINT ["/bin/sh", "-c", "if [ -f /data/options.json ]; then exec ./run.sh; else exec su-exec nodejs node /app/ws-tcp-bridge.js \"$@\"; fi", "--"]
