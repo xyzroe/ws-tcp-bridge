@@ -39,20 +39,32 @@ jobs:
         run: |
           set -e
           ver='${{ steps.setver.outputs.version }}'
+          echo "Updating version to: $ver"
+          
           # Update root package.json
+          echo "Before updating package.json:"
+          cat package.json | jq '.version'
           tmp=$(mktemp)
           jq --arg v "$ver" '.version=$v' package.json > "$tmp" && mv "$tmp" package.json
+          echo "After updating package.json:"
+          cat package.json | jq '.version'
+          
           # Update add-on config.json
+          echo "Before updating ws-tcp-bridge-ha/config.json:"
+          cat ws-tcp-bridge-ha/config.json | jq '.version'
           tmp=$(mktemp)
           jq --arg v "$ver" '.version=$v' ws-tcp-bridge-ha/config.json > "$tmp" && mv "$tmp" ws-tcp-bridge-ha/config.json
+          echo "After updating ws-tcp-bridge-ha/config.json:"
+          cat ws-tcp-bridge-ha/config.json | jq '.version'
+          
+          echo "Git status after updates:"
+          git status --porcelain
       - name: Commit version bumps
         uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore(release): bump version to ${{ steps.setver.outputs.version }}"
           branch: main
-          file_pattern: |
-            package.json
-            ws-tcp-bridge-ha/config.json
+          file_pattern: "package.json ws-tcp-bridge-ha/config.json"
   build:
     name: Build (${{ matrix.os }})
     runs-on: ${{ matrix.os }}
