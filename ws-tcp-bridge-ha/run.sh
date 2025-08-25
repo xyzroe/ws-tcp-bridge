@@ -1,4 +1,4 @@
-#!/usr/bin/env bash
+#!/bin/sh
 set -euo pipefail
 
 OPTIONS_FILE="/data/options.json"
@@ -28,4 +28,4 @@ if [ "$DEBUG_SERIAL" = "true" ]; then
 fi
 
 echo "Starting ws-tcp-bridge on port ${PORT} (ADVERTISE_HOST=${ADVERTISE_HOST:-<auto>})"
-exec node /usr/src/app/ws-tcp-bridge.js "$PORT"
+exec node /app/ws-tcp-bridge.js "$PORT"
