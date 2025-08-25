@@ -18,7 +18,7 @@
   },
   "schema": {
     "port": "int",
-    "advertise_host": "str"
+    "advertise_host": "str?"
   },
   "url": "https://github.com/xyzroe/ws-tcp-bridge",
   "map": [
