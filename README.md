@@ -182,9 +182,32 @@ Response:
 
 ## Configuration
 
-- `ADVERTISE_HOST`: override the host/IP in logs and `/mdns` serial entries
-- Port is taken from the CLI arg (default 8765)
-- In Docker, you can also use `PORT` env and map the same container port with `-p PORT:PORT`.
+The Home Assistant add-on (and Docker/CLI) supports the following configuration keys (see `ws-tcp-bridge-ha/config.json`):
+
+- `port` (int, default: 8765) — TCP port the WebSocket server listens on. Can also be set via the `PORT` env var or CLI arg.
+- `serial_scan_interval` (int, default: 5000) — interval in milliseconds used when scanning/exposing local serial ports (set to `0` to disable serial monitoring).
+- `advertise_host` (string, optional) — override the host/IP published in logs and `/mdns` serial entries (env var `ADVERTISE_HOST`).
+- `debug_serial` (bool, default: false) — enable extra serial debug logs (env var `DEBUG_SERIAL`, set to `true`)
+
+Examples:
+
+Docker run with serial scan interval and debug enabled:
+
+```bash
+docker run --rm -p 8765:8765 \
+  -e PORT=8765 \
+  -e SERIAL_SCAN_INTERVAL=5000 \
+  -e ADVERTISE_HOST=192.168.1.42 \
+  -e DEBUG_SERIAL=true \
+  ghcr.io/xyzroe/ws-tcp-bridge:latest
+```
+
+Or using the CLI/packaged binary:
+
+```bash
+PORT=9000 SERIAL_SCAN_INTERVAL=5000 ADVERTISE_HOST=192.168.1.42 DEBUG_SERIAL=true \
+  node ws-tcp-bridge.js 9000 5000
+```
 
 ## Home Assistant add-on (optional)
 

@@ -4,26 +4,24 @@
   "slug": "ws-tcp-bridge-ha",
   "description": "Simple WebSocket <-> TCP bridge with optional mDNS and local serial exposure",
   "image": "ghcr.io/xyzroe/ws-tcp-bridge",
-  "arch": [
-    "amd64",
-    "armv7",
-    "aarch64"
-  ],
+  "arch": ["amd64", "armv7", "aarch64"],
   "startup": "services",
   "boot": "auto",
   "init": false,
   "options": {
     "port": 8765,
-    "advertise_host": ""
+    "serial_scan_interval": 5000,
+    "advertise_host": "",
+    "debug_serial": false
   },
   "schema": {
     "port": "int",
-    "advertise_host": "str?"
+    "serial_scan_interval": "int",
+    "advertise_host": "str?",
+    "debug_serial": "bool?"
   },
   "url": "https://github.com/xyzroe/ws-tcp-bridge",
-  "map": [
-    "config:rw"
-  ],
+  "map": ["config:rw"],
   "host_network": true,
   "uart": true
 }

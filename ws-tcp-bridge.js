@@ -8,10 +8,23 @@ const { pathToFileURL } = require("url");
 const path = require("path");
 const fs = require("fs");
 const { Module } = require("module");
-const DEBUG = /^(1|true|yes|on)$/i.test(String(process.env.DEBUG_SERIAL || ""));
+
 // Global cache for extracted prebuild info to avoid duplicate writes/races
 global.__XZG_SERIAL_PREBUILD = global.__XZG_SERIAL_PREBUILD || null;
 global.__XZG_SERIAL_PREBUILD_CLEANUP = global.__XZG_SERIAL_PREBUILD_CLEANUP || false;
+
+// Allow configuring the port via env (PORT) or argv[2]; default 8765
+const WS_PORT = Number(process.env.PORT || process.argv[2] || 8765);
+
+// Allow configuring the serial scan interval via env (SERIAL_SCAN_INTERVAL) or argv[3]; default 10000
+// Use nullish coalescing so that '0' is preserved (disable monitor when 0)
+const SERIAL_SCAN_INTERVAL = Number(process.env.SERIAL_SCAN_INTERVAL || process.argv[3] || 10000);
+
+// Allow configuring the advertise host via env (ADVERTISE_HOST) or argv[4]; default null
+const ADVERTISE_HOST = process.env.ADVERTISE_HOST || process.argv[4] || null;
+
+// Debugging flag port via env (PORT) or argv[5]; default false
+const DEBUG = /^(1|true|yes|on)$/i.test(String(process.env.DEBUG_SERIAL || ""));
 
 function registerTempCleanup(dir) {
   try {
@@ -245,7 +258,7 @@ function ensureSerialportPrebuildExtractedSync() {
     if (!fs.existsSync(chosen)) return null;
     const data = fs.readFileSync(chosen);
     // Use a per-process folder to avoid cross-run locking conflicts
-    const outDir = path.join(os.tmpdir(), "xzg-serial-bridge-prebuilds", `${plat}-${arch}-${process.pid}`);
+    const outDir = path.join(os.tmpdir(), "ws-tcp-bridge-prebuilds", `${plat}-${arch}-${process.pid}`);
     try {
       fs.mkdirSync(outDir, { recursive: true });
     } catch {}
@@ -425,7 +438,7 @@ async function ensureSerialportPrebuildExtracted() {
   if (DEBUG) console.log("[serial][pkg] selected prebuild file:", chosenFile);
   const data = fs.readFileSync(chosenFile);
   // Write to a stable temp dir
-  const baseTmp = path.join(os.tmpdir(), "xzg-serial-bridge-prebuilds");
+  const baseTmp = path.join(os.tmpdir(), "ws-tcp-bridge-prebuilds");
   try {
     fs.mkdirSync(baseTmp, { recursive: true });
   } catch {}
@@ -466,9 +479,6 @@ function detectMusl() {
   return false;
 }
 
-// Allow configuring the port via env (PORT) or argv[2]; default 8765
-const WS_PORT = Number(process.env.PORT || process.argv[2] || 8765);
-
 // --- Global store of opened SerialPort instances ---
 const openSerialPorts = new Map(); // path -> SerialPort instance
 // Reverse mapping of local TCP server port to the serial path
@@ -478,39 +488,138 @@ const serialPortStates = new Map(); // path -> { dtr: boolean, rts: boolean }
 
 const server = http.createServer(async (req, res) => {
   try {
+    // CORS: provide permissive defaults (no credentials) and answer preflight requests.
+    // This ensures browsers receive the expected headers even when individual
+    // response paths call `res.writeHead(...)` with their own headers.
+    // dynamic CORS: echo Origin (so credentials work), allow private-network for modern browsers
+    const originHeader = req.headers.origin || "*";
+    const _corsHeaders = {
+      "Access-Control-Allow-Origin": originHeader,
+      "Access-Control-Allow-Credentials": "true", // required if frontend sends credentials
+      "Access-Control-Allow-Methods": "GET,POST,OPTIONS",
+      "Access-Control-Allow-Headers": "Content-Type,Accept,Origin,X-Requested-With,Authorization",
+      "Access-Control-Allow-Private-Network": "true", // for Private Network Access preflight (Chrome/Edge)
+      "Access-Control-Max-Age": "86400",
+    };
+
+    // Apply headers immediately for all responses
+    try {
+      for (const k of Object.keys(_corsHeaders)) res.setHeader(k, _corsHeaders[k]);
+    } catch {}
+
+    // Monkey-patch writeHead so later handlers that call writeHead with custom
+    // headers do not accidentally drop our CORS headers.
+    try {
+      const _origWriteHead = res.writeHead && res.writeHead.bind(res);
+      if (_origWriteHead) {
+        res.writeHead = (...args) => {
+          try {
+            if (args.length >= 2 && typeof args[args.length - 1] === "object") {
+              const hdrs = Object.assign({}, _corsHeaders, args[args.length - 1]);
+              const newArgs = args.slice(0, args.length - 1).concat(hdrs);
+              return _origWriteHead(...newArgs);
+            }
+          } catch {}
+          const result = _origWriteHead(...args);
+          try {
+            for (const k of Object.keys(_corsHeaders)) res.setHeader(k, _corsHeaders[k]);
+          } catch {}
+          return result;
+        };
+      }
+    } catch {}
+
+    // Handle preflight requests quickly
+    if (String(req.method || "").toUpperCase() === "OPTIONS") {
+      try {
+        // Some callers pass headers via writeHead; ensure status only here.
+        res.writeHead(204);
+      } catch {}
+      return res.end();
+    }
+
     const u = new URL(req.url, `http://${req.headers.host}`);
     if (u.pathname === "/mdns") {
+      // Lightweight request logging to help diagnose why some browsers see an
+      // empty response while manual requests return JSON. We log method, key
+      // CORS/PNA related headers and the origin so we can compare browser vs curl.
+      try {
+        const dbg = {
+          method: req.method,
+          url: req.url,
+          origin: req.headers.origin,
+          "sec-fetch-site": req.headers["sec-fetch-site"],
+          "sec-fetch-mode": req.headers["sec-fetch-mode"],
+          "sec-fetch-dest": req.headers["sec-fetch-dest"],
+          "access-control-request-private-network": req.headers["access-control-request-private-network"],
+        };
+        console.log("[mdns] incoming request:", JSON.stringify(dbg));
+      } catch {}
+
       if (!BonjourCtor) {
         console.warn("[mdns] bonjour-service not installed; cannot scan");
         res.writeHead(500, { "content-type": "application/json", "access-control-allow-origin": "*" });
         return res.end(JSON.stringify({ error: "bonjour-service not installed" }));
       }
-      const typesParam = u.searchParams.get("types");
-      const timeout = Math.max(500, Math.min(10000, Number(u.searchParams.get("timeout")) || 2000));
+
+      // Only support GET query parameters for /mdns to preserve request
+      // structure expected by clients. Do not read or interpret POST bodies.
+      let typesParam = u.searchParams.get("types");
+      let timeout = Math.max(500, Math.min(10000, Number(u.searchParams.get("timeout")) || 2000));
+      if (String(req.method || "").toUpperCase() !== "GET") {
+        // Log non-GET attempts to help debug clients that accidentally POST.
+        try {
+          console.log("[mdns] non-GET request method=", String(req.method));
+        } catch {}
+      }
+
       const types = (typesParam || "")
         .split(",")
         .map((s) => s.trim())
         .filter(Boolean);
       const normalized = types.map((t) => parseServiceType(t)).filter(Boolean);
       const wantsLocalSerial = types.some((t) => isLocalSerialToken(t));
-      // console.log(
-      //   "[mdns] request types=",
-      //   types,
-      //   "normalized=",
-      //   normalized,
-      //   "localSerial=",
-      //   wantsLocalSerial,
-      //   "timeout=",
-      //   timeout
-      // );
-      const results = await scanMdns(normalized, timeout);
-      if (wantsLocalSerial) {
-        const locals = await listLocalSerialAsServices();
-        results.push(...locals);
+
+      let results = [];
+      try {
+        results = await scanMdns(normalized, timeout);
+        if (wantsLocalSerial) {
+          const locals = await listLocalSerialAsServices();
+          results.push(...locals);
+        }
+        console.log("[mdns] scan done, found", results.length);
+      } catch (e) {
+        console.warn("[mdns] scan error:", String(e));
+        // Fall through to return an error payload below
       }
-      console.log("[mdns] scan done, found", results.length);
-      res.writeHead(200, { "content-type": "application/json", "access-control-allow-origin": "*" });
-      return res.end(JSON.stringify({ devices: results }));
+
+      const payload = { devices: results || [], error: results ? undefined : "scan_error" };
+      const body = JSON.stringify(payload);
+      // Explicitly set Content-Type and Content-Length and repeat PNA/CORS headers
+      try {
+        res.setHeader("Content-Type", "application/json");
+        res.setHeader("Content-Length", Buffer.byteLength(body));
+        // repeat important CORS/PNA headers for some browsers which check them on actual response
+        const originHeaderResp = req.headers.origin || "*";
+        res.setHeader("Access-Control-Allow-Origin", originHeaderResp);
+        res.setHeader("Access-Control-Allow-Credentials", "true");
+        res.setHeader("Access-Control-Allow-Private-Network", "true");
+      } catch (e) {
+        console.warn("[mdns] failed to set response headers:", String(e));
+      }
+      try {
+        res.writeHead(200);
+      } catch (e) {}
+      try {
+        console.log("[mdns] sending response length", body.length);
+        return res.end(body);
+      } catch (e) {
+        try {
+          // Best-effort: ensure connection closes with an error payload
+          res.end(JSON.stringify({ devices: [], error: String(e) }));
+        } catch {}
+        return;
+      }
     }
 
     // --- Endpoint to control DTR/RTS on a local serial port ---
@@ -597,8 +706,6 @@ const server = http.createServer(async (req, res) => {
 });
 const wss = new WebSocket.Server({ server, perMessageDeflate: false });
 
-const ADVERTISE_HOST = process.env.ADVERTISE_HOST || null;
-
 function getPrimaryIPv4() {
   try {
     const ifaces = os.networkInterfaces();
@@ -680,16 +787,38 @@ server.listen(WS_PORT, "0.0.0.0", () => {
       //console.log("[mdns] bonjour ctor resolved:", typeof BonjourCtor);
     } catch {}
   }
-  // Startup summary: modules loaded status
-  const wsOk = !!WebSocket;
-  const bonjourOk = !!BonjourCtor;
+  // Startup summary: modules loaded status - prefer to show package versions when available
+  function tryReadPkgVersion(names) {
+    if (!Array.isArray(names)) names = [names];
+    for (const name of names) {
+      try {
+        // Common case: package.json accessible via '<pkg>/package.json'
+        const pkg = require(name + "/package.json");
+        if (pkg && pkg.version) return `${name}@${pkg.version}`;
+      } catch {}
+      try {
+        // Fallback: resolve main entry and look for package.json nearby
+        const resolved = require.resolve(name);
+        const dir = path.dirname(resolved);
+        try {
+          const pkg2 = require(path.join(dir, "package.json"));
+          if (pkg2 && pkg2.version) return `${name}@${pkg2.version}`;
+        } catch {}
+      } catch {}
+    }
+    return null;
+  }
+
+  const wsVersion = tryReadPkgVersion("ws") || (WebSocket && WebSocket?.version) || "unknown";
+  const bonjourVersion =
+    tryReadPkgVersion(["bonjour-service", "bonjour"]) || (BonjourCtor && BonjourCtor.name) || "unknown";
+
   const onSerialReady = (sp) => {
-    const serialOk = !!sp;
-    console.log(
-      `[startup] modules: ws=${wsOk ? "ok" : "missing"}, bonjour=${bonjourOk ? "ok" : "missing"}, serial=${
-        serialOk ? "ok" : "missing"
-      }`
-    );
+    const serialVersion =
+      tryReadPkgVersion(["serialport", "@serialport/bindings-cpp", "@serialport/bindings"]) ||
+      (sp && (sp.version || (sp.SerialPort && sp.SerialPort.version))) ||
+      "unknown";
+    console.log(`[startup] modules: ${wsVersion}, ${bonjourVersion}, ${serialVersion}`);
   };
   if (process.pkg) {
     // Prepare prebuild and warm serial
@@ -705,6 +834,10 @@ server.listen(WS_PORT, "0.0.0.0", () => {
       .then(onSerialReady)
       .catch(() => onSerialReady(null));
   }
+  // Start background monitor to open/close TCP servers for all available serial ports
+  try {
+    startSerialMonitor().catch(() => {});
+  } catch {}
 });
 
 function parseServiceType(full) {
@@ -799,47 +932,190 @@ async function scanMdns(typeList, timeoutMs) {
 // --- Local Serial exposure ---
 const serialServers = new Map(); // path -> { server, port }
 
-async function listLocalSerialAsServices() {
-  const SerialPortLib = await getSerialPort();
-  if (!SerialPortLib) {
-    console.warn("[serial] serialport not installed; skipping local serial exposure");
-    return [];
-  }
-  let ports = [];
+// Keep original port info returned by serialport.list()
+const serialPortDetails = new Map(); // path -> portInfo
+
+async function closeSerialTcpServer(path) {
   try {
-    const maybeSerialPort = SerialPortLib.SerialPort || SerialPortLib; // compat
-    if (typeof maybeSerialPort.list === "function") {
-      ports = await maybeSerialPort.list();
-    } else if (typeof SerialPortLib.list === "function") {
-      ports = await SerialPortLib.list();
-    } else {
-      console.warn("[serial] no list() available on serialport lib");
-      return [];
+    const info = serialServers.get(path);
+    if (!info) return;
+    try {
+      // close TCP server
+      info.server.close(() => {
+        // closed
+      });
+    } catch {}
+    try {
+      tcpPortToSerialPath.delete(info.port);
+    } catch {}
+    serialServers.delete(path);
+    serialPortDetails.delete(path);
+    try {
+      const sp = openSerialPorts.get(path);
+      if (sp) {
+        if (typeof sp.close === "function") {
+          try {
+            sp.close();
+          } catch {}
+        }
+        openSerialPorts.delete(path);
+      }
+    } catch {}
+    console.log("[serial] closed TCP server for", path);
+  } catch (e) {
+    console.warn("[serial] error closing tcp server for", path, String(e));
+  }
+}
+
+async function scanAndSyncSerialPorts() {
+  try {
+    const SerialPortLib = await getSerialPort();
+    if (!SerialPortLib) return;
+    let ports = [];
+    try {
+      const maybeSerialPort = SerialPortLib.SerialPort || SerialPortLib;
+      if (typeof maybeSerialPort.list === "function") {
+        ports = await maybeSerialPort.list();
+      } else if (typeof SerialPortLib.list === "function") {
+        ports = await SerialPortLib.list();
+      } else {
+        return;
+      }
+    } catch (e) {
+      console.warn("[serial] list() failed during scan:", e);
+      return;
+    }
+    const foundPaths = new Set();
+    for (const p of ports) {
+      const pathName = p.path || p.comName || p.device || p.port || p.friendlyName;
+      if (!pathName) continue;
+      foundPaths.add(pathName);
+      serialPortDetails.set(pathName, p);
+      if (!serialServers.has(pathName)) {
+        try {
+          // start server for new port (don't await to allow parallel)
+          ensureSerialTcpServer(pathName, 115200 /* default baud */).catch((e) =>
+            console.warn("[serial] failed to create tcp server for", pathName, e)
+          );
+        } catch (e) {
+          console.warn("[serial] ensureSerialTcpServer error:", e);
+        }
+      }
+    }
+    // Remove servers for ports that disappeared
+    for (const existingPath of Array.from(serialServers.keys())) {
+      if (!foundPaths.has(existingPath)) {
+        await closeSerialTcpServer(existingPath);
+      }
     }
   } catch (e) {
-    console.warn("[serial] list() failed:", e);
-    return [];
+    if (DEBUG) console.warn("[serial] scanAndSyncSerialPorts error:", String(e));
   }
+}
+
+let _serialMonitorHandle = null;
+async function startSerialMonitor() {
+  try {
+    if (SERIAL_SCAN_INTERVAL === 0) {
+      if (DEBUG) console.log("[serial] monitor disabled (SERIAL_SCAN_INTERVAL=0)");
+      return;
+    }
+    // initial sync
+    await scanAndSyncSerialPorts();
+    if (_serialMonitorHandle) return;
+    _serialMonitorHandle = setInterval(() => {
+      scanAndSyncSerialPorts().catch(() => {});
+    }, SERIAL_SCAN_INTERVAL);
+    if (DEBUG) console.log("[serial] monitor started, interval", SERIAL_SCAN_INTERVAL);
+  } catch (e) {
+    console.warn("[serial] failed to start monitor:", e);
+  }
+}
+
+function stopSerialMonitor() {
+  try {
+    if (_serialMonitorHandle) {
+      clearInterval(_serialMonitorHandle);
+      _serialMonitorHandle = null;
+      if (DEBUG) console.log("[serial] monitor stopped");
+    }
+  } catch (e) {
+    if (DEBUG) console.warn("[serial] stopSerialMonitor failed:", String(e));
+  }
+}
+
+async function closeAllSerialServers() {
+  try {
+    const keys = Array.from(serialServers.keys());
+    for (const p of keys) {
+      try {
+        await closeSerialTcpServer(p);
+      } catch (e) {
+        if (DEBUG) console.warn("[serial] failed closing server for", p, String(e));
+      }
+    }
+  } catch (e) {
+    if (DEBUG) console.warn("[serial] closeAllSerialServers failed:", String(e));
+  }
+}
+
+let _gracefulShuttingDown = false;
+async function gracefulShutdown(code) {
+  try {
+    if (_gracefulShuttingDown) return;
+    _gracefulShuttingDown = true;
+    console.log("[shutdown] graceful shutdown starting...");
+    // Stop monitor to avoid races
+    stopSerialMonitor();
+    // Close serial-related servers/ports
+    await closeAllSerialServers();
+    // Close websocket and http servers
+    try {
+      if (wss && typeof wss.close === "function") {
+        wss.close();
+      }
+    } catch (e) {}
+    try {
+      if (server && typeof server.close === "function") {
+        server.close(() => {
+          // closed
+        });
+      }
+    } catch (e) {}
+    console.log("[shutdown] done");
+  } catch (e) {
+    console.warn("[shutdown] error:", String(e));
+  } finally {
+    try {
+      if (typeof code === "number") process.exit(code);
+    } catch {}
+  }
+}
+
+async function listLocalSerialAsServices() {
+  // Only return services for servers we already created via the monitor.
   const services = [];
-  const hostIp = getAdvertiseHost(); // use the actual advertised IP
-  for (const p of ports) {
-    const path = p.path || p.comName || p.device || p.port || p.friendlyName;
-    if (!path) continue;
-    const portInfo = await ensureSerialTcpServer(path, 115200 /* default baud */);
-    services.push({
-      name: path,
-      host: hostIp, // instead of "0.0.0.0"
-      port: portInfo.port,
-      type: "local",
-      protocol: "serial",
-      fqdn: path,
-      txt: {
-        board: p.manufacturer || p.productId || "",
-        serial_number: p.serialNumber || "",
-        vendor_id: p.vendorId || "",
-        product_id: p.productId || "",
-      },
-    });
+  try {
+    const hostIp = getAdvertiseHost(); // use the actual advertised IP
+    for (const [pathName, info] of serialServers) {
+      const p = serialPortDetails.get(pathName) || {};
+      services.push({
+        name: pathName,
+        host: hostIp,
+        port: info.port,
+        type: "local",
+        protocol: "serial",
+        fqdn: pathName,
+        txt: {
+          board: p.manufacturer || p.productId || "",
+          serial_number: p.serialNumber || "",
+          vendor_id: p.vendorId || "",
+          product_id: p.productId || p.productId || "",
+        },
+      });
+    }
+  } catch (e) {
+    console.warn("[serial] listLocalSerialAsServices failed:", e);
   }
   return services;
 }
@@ -933,4 +1209,17 @@ function tcpPortFromPath(path) {
   } catch {
     return null;
   }
+}
+
+// Install graceful shutdown hooks
+try {
+  process.on("SIGINT", () => gracefulShutdown(0));
+  process.on("SIGTERM", () => gracefulShutdown(0));
+  process.on("SIGHUP", () => gracefulShutdown(0));
+  process.on("uncaughtException", (err) => {
+    console.error("[uncaughtException]", err);
+    gracefulShutdown(1);
+  });
+} catch (e) {
+  if (DEBUG) console.warn("[shutdown] failed to install handlers:", String(e));
 }
