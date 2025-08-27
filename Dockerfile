@@ -31,6 +31,9 @@ WORKDIR /app
 # Copy dependencies from builder stage
 COPY --from=builder /app/node_modules ./node_modules
 
+# Copy web folder from builder stage so it ends up in the final image
+COPY --from=builder /app/web ./web
+
 # Copy app source
 COPY package*.json ./
 COPY ws-tcp-bridge.js ./
