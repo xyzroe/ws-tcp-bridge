@@ -10,6 +10,10 @@ COPY package*.json ./
 # Install dependencies
 RUN npm ci --only=production && npm cache clean --force
 
+# Copy fetch script and run it to populate web/ before packaging into image
+COPY scripts ./scripts
+RUN node scripts/fetch-web.js || true
+
 # Production stage
 FROM node:18-alpine
 

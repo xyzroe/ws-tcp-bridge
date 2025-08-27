@@ -1,4 +1,5 @@
 
+
 # Node dependencies
 node_modules/
 
@@ -30,6 +31,7 @@ coverage/
 /tmp/
 /temp/
 .cache/
+/web/
 
 # Environment files
 .env

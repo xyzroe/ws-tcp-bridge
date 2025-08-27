@@ -89,6 +89,9 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
+      - name: Fetch web assets
+        run: npm run fetch-web
+
       - name: Build (macOS)
         if: matrix.os == 'macos-latest'
         run: npm run build:pkg:mac
